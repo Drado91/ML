@@ -1,7 +1,7 @@
 import numpy as np
 
-STUDENT={'name': 'YOUR NAME',
-         'ID': 'YOUR ID NUMBER'}
+STUDENT={'name': 'Dudi',
+         'ID': '305560070'}
 
 def softmax(x):
     """
@@ -10,12 +10,18 @@ def softmax(x):
     returns: an n-dim vector (numpy array) of softmax values
     """
     # YOUR CODE HERE
+    #print(x)
+    x_stb = x - np.max(x)
+    #print(x_stb)
+    softx = np.exp(x_stb) / np.sum(np.exp(x_stb))
+    #print(softx)
+    #print(np.sum(softx))
     # Your code should be fast, so use a vectorized implementation using numpy,
     # don't use any loops.
     # With a vectorized implementation, the code should be no more than 2 lines.
     #
     # For numeric stability, use the identify you proved in Ex 2 Q1.
-    return x
+    return softx
     
 
 def classifier_output(x, params):
@@ -23,8 +29,11 @@ def classifier_output(x, params):
     Return the output layer (class probabilities) 
     of a log-linear classifier with given params on input x.
     """
-    W,b = params
+
     # YOUR CODE HERE.
+    W, b = params
+    s = np.add(np.dot(x,W), b)
+    probs=softmax(s)
     return probs
 
 def predict(x, params):
@@ -46,13 +55,37 @@ def loss_and_gradients(x, y, params):
     returns:
         loss,[gW,gb]
 
+
     loss: scalar
     gW: matrix, gradients of W
     gb: vector, gradients of b
     """
     W,b = params
     # YOU CODE HERE
-    return loss,[gW,gb]
+    probs = classifier_output(x, params)
+    yy=y.astype(int) #make y vector float->int
+    loss = -np.log(probs[yy])
+
+    y_vect=np.zeros((1,6)) #make y vector instead of scalar
+    y_vect[:,int(y)] = 1
+
+
+  #  for i in range(len(y)):
+   #     for j in y[i]:
+    #        if (y[i][j] != 0):
+     #           y_vect[i][j] = 1
+
+
+    #i=np.random.randint(1, len(v))
+    #y_vect[i]=1
+    #gW=(1/np.shape(x)[0])*np.transpose(x)*(y_vect-probs)
+    gW = np.dot((probs - y_vect).reshape(-1, 1), np.asarray(x).reshape(-1, 1).T).T
+    gb=(1/np.shape(x)[0])*(y_vect-probs)
+
+
+    return loss, [gW, gb]
+
+
 
 def create_classifier(in_dim, out_dim):
     """
@@ -67,15 +100,15 @@ if __name__ == '__main__':
     # Sanity checks for softmax. If these fail, your softmax is definitely wrong.
     # If these pass, it may or may not be correct.
     test1 = softmax(np.array([1,2]))
-    print test1
+    print (test1)
     assert np.amax(np.fabs(test1 - np.array([0.26894142,  0.73105858]))) <= 1e-6
 
     test2 = softmax(np.array([1001,1002]))
-    print test2
+    print (test2)
     assert np.amax(np.fabs(test2 - np.array( [0.26894142, 0.73105858]))) <= 1e-6
 
     test3 = softmax(np.array([-1001,-1002])) 
-    print test3 
+    print (test3)
     assert np.amax(np.fabs(test3 - np.array([0.73105858, 0.26894142]))) <= 1e-6
 
 
@@ -95,7 +128,7 @@ if __name__ == '__main__':
         loss,grads = loss_and_gradients([1,2,3],0,[W,b])
         return loss,grads[1]
 
-    for _ in xrange(10):
+    for _ in range(10):
         W = np.random.randn(W.shape[0],W.shape[1])
         b = np.random.randn(b.shape[0])
         gradient_check(_loss_and_b_grad, b)
